@@ -12,7 +12,8 @@ import pandas
 from flask import Flask, escape, request, render_template
 from c_pattern import candlestick_patterns
 import plotly.graph_objects as go
-
+from hammering_support_resistance_scalping import resistance_points_dict, support_points_dict
+from rsi_midway_strategy import midway_positional_strategy
 '''
 https://www.reddit.com/r/flask/comments/dfrdob/flask_not_updating_localhost_with_new_image_old/
 https://stackoverflow.com/questions/13768007/browser-caching-issues-in-flask
@@ -23,6 +24,10 @@ to force reload on the web browser, Ctrl+F5
 
 
 app = Flask(__name__)
+candle_stick_time = "15min"
+time_period = "4d"
+nifty_50_companies_list = "nifty_orig.csv"
+candle_stick_time_interval = "15m"
 
 @app.route("/")
 def index():
@@ -30,16 +35,17 @@ def index():
     pattern  = request.args.get('pattern', False) # get pattern name from the link itself 
     print(pattern)
     stocks = {}
-    with open('dataset/nifty.csv') as f:
+    
+    with open('dataset/'+nifty_50_companies_list) as f:
         for row in csv.reader(f):
             stocks[row[0]] = {'company': row[1]}
     print(stocks)
     
     if pattern:
-        for filename in os.listdir('dataset/5min'):
-            df = pandas.read_csv('dataset/5min/{}'.format(filename))
-            #print(df.index)
-            #print(df.head())
+        
+        for filename in os.listdir('dataset/'+candle_stick_time):
+            
+            df = pandas.read_csv('dataset/{}/{}'.format(candle_stick_time,filename))
             pattern_function = getattr(talib, pattern)
             symbol = filename.split('.')[0]
             x = filename.rfind('.')
@@ -49,10 +55,10 @@ def index():
             createChartPatterns(df , symbol)
             try:
                 results = pattern_function(df['Open'], df['High'], df['Low'], df['Close'])
-                #last = results.tail(1).values[0]
-                last = results.tail(8).values[0]
+                
+                last = results.tail(2).values[0] # get 2nd Last value from the chart (last candle is not fully formed)
                 print(last)
-                #print(last)
+            
                 if last > 0:
                     stocks[symbol][pattern] = 'bullish'
                 elif last < 0:
@@ -69,13 +75,16 @@ def index():
 @app.route("/snapshot")
 def snapshot():
 
-    with open("dataset/nifty.csv") as f:
+   
+    with open("dataset/"+nifty_50_companies_list) as f:
         
         for row in csv.reader(f):
             print(row[0] , row[1])
             symbol = row[0]
-            df = yf.download(tickers=symbol, period = "1d" , interval="5m")
-            df.to_csv('dataset/5min/{}.csv'.format(symbol))
+          
+            df = yf.download(tickers=symbol, period = time_period , interval=candle_stick_time_interval)
+            
+            df.to_csv('dataset/{}/{}.csv'.format(candle_stick_time,symbol))
     
     return {'code':'True'}
 
@@ -91,14 +100,7 @@ def createChartPatterns(stock , symbol):
                             )
 
     fig = go.Figure(data=[candlestick])
-
-    '''fig.update_layout(
-    width=800, height=600,
-    #title="Reliance Stock, 2022",
-    yaxis_title=symbol
-    )'''
     fig.write_image("static/new/"+symbol+".png")
-    #fig.show()
 
 @app.after_request
 def add_header(response):
@@ -109,8 +111,66 @@ def add_header(response):
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
     response.headers['Cache-Control'] = 'public, max-age=0'
     return response               
-    
 
+@app.route("/getdetails")
+def getR_SDetails():
+
+    company_R_S_points = {}
+    with open('dataset/'+nifty_50_companies_list) as f:
+        for row in csv.reader(f):
+            company_R_S_points[row[0]] = {'company': row[1]}
+            
+    for filename in os.listdir('dataset/'+candle_stick_time):
+          
+            df = pandas.read_csv('dataset/{}/{}'.format(candle_stick_time,filename))
+            symbol = filename.split('.')[0]
+            x = filename.rfind('.')
+           
+            symbol = filename[:x] 
+
+            try:
+                
+                company_R_S_points[symbol]["resistance"] = resistance_points_dict(df)
+                company_R_S_points[symbol]["support"] = support_points_dict(df)
+            except Exception as e:
+                print('failed on filename: ', filename)
+                print(e)
+                
+        
+          
+            
+        
+                  
+    return company_R_S_points
+
+@app.route("/getpositional")
+def getPosCall():
+
+    company_pos_call = {}
+    with open('dataset/'+nifty_50_companies_list) as f:
+        for row in csv.reader(f):
+            company_pos_call[row[0]] = {'company': row[1]}
+            
+    for filename in os.listdir('dataset/'+candle_stick_time):
+          
+            df = pandas.read_csv('dataset/{}/{}'.format(candle_stick_time,filename))
+            symbol = filename.split('.')[0]
+            x = filename.rfind('.')
+           
+            symbol = filename[:x] 
+
+            try:
+                
+                print((midway_positional_strategy(df)))
+                company_pos_call[symbol]["Indication"] = midway_positional_strategy(df)[0]
+                company_pos_call[symbol]["Rsi"] = midway_positional_strategy(df)[1]
+                
+            except Exception as e:
+                print('failed on filename: ', filename)
+                print(e)
+                
+    return company_pos_call
+            
 if __name__ == "__main__":
     
     app.run(port=5000)
