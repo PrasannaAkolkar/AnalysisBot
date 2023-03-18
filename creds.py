@@ -20,17 +20,6 @@ def getCreds():
              "consumer_key":"GoTKJsi1TC3kdAhXlwVT6oEKWLIa",
              "app_id":"k_Q_z0lfPNsi2TvFfIy_hcUDSLYa",
              "password": "Aastha@123",
-             "access_code":"6508"
+             "access_code":"2829"
              }
     return creds
-
-
-
-
-
-# access_token= "1e410acc-f153-3ffe-8a9d-f8da89ff8498"
-# userid = "PA13121999"
-# consumer_key = "GoTKJsi1TC3kdAhXlwVT6oEKWLIa"
-# app_id= "k_Q_z0lfPNsi2TvFfIy_hcUDSLYa"
-# password = "Aastha@123"
-# access_code = "7679"

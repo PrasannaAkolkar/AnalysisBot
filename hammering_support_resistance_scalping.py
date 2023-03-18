@@ -55,14 +55,6 @@ def support_points_dict(stock):
                         new_support_dict[key] = {"final target":final_target,"gap":key-stock_low_value,"low_value":stock_low_value,"value": value,"target 1": key-targets[0] , "target 2":key-targets[1], "target 3":key-targets[2], "SL": key+targets[3]}
                     break
                 
-            
-                
-
-                
-            
-            
-            
-            
             # new_support_dict[key] = {"value": value,"target 1": key-targets[0] , "target 2":key-targets[1], "target 3":key-targets[2], "SL": key+targets[3]}
 
             #break
@@ -110,7 +102,6 @@ def resistance_points_dict(stock):
             
             # new_resistance_dict[key] = {"value": value,"target 1": key+targets[0] , "target 2":key+targets[1], "target 3":key+targets[2], "SL": key-targets[3]}
 
-        
     return new_resistance_dict
         
         

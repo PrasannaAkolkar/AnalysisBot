@@ -1,0 +1,5 @@
+
+https://www.reddit.com/r/flask/comments/dfrdob/flask_not_updating_localhost_with_new_image_old/
+https://stackoverflow.com/questions/13768007/browser-caching-issues-in-flask
+https://stackoverflow.com/questions/3811595/flask-werkzeug-how-to-attach-http-content-length-header-to-file-download
+to force reload on the web browser, Ctrl+F5
