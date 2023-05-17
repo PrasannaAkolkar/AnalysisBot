@@ -20,6 +20,14 @@ def getCreds():
              "consumer_key":"GoTKJsi1TC3kdAhXlwVT6oEKWLIa",
              "app_id":"k_Q_z0lfPNsi2TvFfIy_hcUDSLYa",
              "password": "Aastha@123",
-             "access_code":"2829"
+             "access_code":"7210"
              }
+    return creds
+
+def getIcici():
+    creds = {
+        "api_key":"$036u469~)94xC220004)1961M4@^V9n",
+        "api_secret":"l9263630=u21VO410^85_0689`5*1Bq9",
+        "session_token":"7816719"
+    }
     return creds

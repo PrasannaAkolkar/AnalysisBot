@@ -8,6 +8,7 @@ Created on Sat Mar 18 16:21:56 2023
 # from app import getR_SDetails
 import yfinance as yf
 from send_message_discord import send_discord_message
+from db_config import setKeyValueRedis, getValueRedis, keyExists
 
 
 
@@ -134,12 +135,81 @@ def backtestHammerStrategy(getR_SDetails,company_name='', final_result='',name_i
         
   
     return final_result
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+def backtestHammerStrategyLive(quote,getR_SDetails,company_name=''):
+    
+    
+    ltp = float(quote.get("success")[0].get("ltp"))
+    open_val = float(quote.get("success")[0].get("open_price"))
+    
+    # ltp = 3069
+    # open_val = 3065
+    
+    print("ltp and open" , ltp, open_val)
+    
+    if(getR_SDetails().get(company_name)):
+        print("inside this")
+        stock_val_support = getR_SDetails().get(company_name).get('support')
+        stock_val_resistance = getR_SDetails().get(company_name).get('resistance')
+    
+        supportKeys = (stock_val_support.keys())
+        resitanceKeys = (stock_val_resistance.keys())
+    
+        for key in supportKeys:
+            print("jey" , key)
+            if(keyExists(key)):
+                continue
+            
+            if((ltp <= key) and (open_val >= key)):
+                
+                if(ltp <= stock_val_support.get(key).get('final target')):
+                    setKeyValueRedis(key, "True")
+                    continue
+                
+                print("place a limit order at key and add target and other params along with SL")
+                send_discord_message("@everyone limit order trade placed")
+
+                setKeyValueRedis(key, "True")
+        for key in resitanceKeys:
+            print("key" , key)
+            if(keyExists(key)):
+                continue
+            
+            if((ltp >= key) and (open_val <= key)):
+                print("here fopr once",stock_val_resistance)
+                
+                
+                if(ltp >= stock_val_resistance.get(key).get('final target')):  
+                    #check target breached on this and 3 previous candles. if yes then skip (or check last 5 min low)
+                    setKeyValueRedis(key, "True")
+                    continue
+                print("place a limit order at key and add target and other params along with SL")
+                send_discord_message("@everyone limit order trade placed")
+                setKeyValueRedis(key, "True")
+                
+                
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                
+                
+            
+            
+  
+    

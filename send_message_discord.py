@@ -17,8 +17,7 @@ def send_discord_message(message):
 
     # Send a POST request to the webhook URL with the payload
     response = requests.post(webhook_url, json=payload)
-
-    # Check if the request was successful
+    
     if response.status_code == 204:
         print('Message sent successfully')
     else:
