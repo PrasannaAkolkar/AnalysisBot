@@ -3,3 +3,14 @@ https://www.reddit.com/r/flask/comments/dfrdob/flask_not_updating_localhost_with
 https://stackoverflow.com/questions/13768007/browser-caching-issues-in-flask
 https://stackoverflow.com/questions/3811595/flask-werkzeug-how-to-attach-http-content-length-header-to-file-download
 to force reload on the web browser, Ctrl+F5
+https://api.icicidirect.com/apiuser/ICICIDirectAPIDOC.htm#sec-eqsepstocklist
+
+
+
+
+Ideas:
+
+Allow user to place an order from the website for stocks, options etc
+Allow user to create a wishlist of stocks to watch
+The wishlist must continously make a call to the icici api to show the latest prices
+Download and visualize the backtested data

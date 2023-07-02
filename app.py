@@ -7,10 +7,11 @@ Created on Wed Apr 20 19:33:06 2022
 
 from myimports import *
 
+
 breeze = init_Icici_client()
 
 #get historical data
-historical_data = getHistoricalDataICICI(breeze,"5minute", "2022-08-17T07:00:00.000Z" , "2022-08-17T07:00:00.000Z", "NIFTY","NSE","cash")
+#historical_data = getHistoricalDataICICI(breeze,"5minute", "2022-08-17T07:00:00.000Z" , "2022-08-17T07:00:00.000Z", "NIFTY","NSE","cash")
 
 # print("df " , historical_data)
 
@@ -20,14 +21,14 @@ historical_data = getHistoricalDataICICI(breeze,"5minute", "2022-08-17T07:00:00.
 print("funds ",breeze.get_funds())
 
 app = Flask(__name__)
-
+CORS(app)
 breeze.ws_connect()
 
-breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second")
+# breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second")
 
-def on_ticks(ticks):
-    print("Ticks: {}".format(ticks))
-breeze.on_ticks = on_ticks
+# def on_ticks(ticks):
+#     print("Ticks: {}".format(ticks))
+# breeze.on_ticks = on_ticks
 
 
 
@@ -39,22 +40,11 @@ columns = ['Datetime', 'Company Name', 'Buy Price', 'Trade Type', 'Target Achiev
            'Profit', 'Loss', 'SL']
 
 
-
-
 def run_every_five_seconds():
     print("inside")
     while True:
         getQuote()
         time.sleep(10)
-
-# try:
-
-#     order = client.place_order(order_type="MIS", instrument_token=8658, transaction_type="BUY",
-#                 quantity=1, price=6.25, disclosed_quantity=0, trigger_price=6.20,
-#                 validity="GFD", variety="REGULAR", tag="string")
-#     print("limit order" , order)
-# except Exception as e:
-#     print("Exception when calling OrderApi->place_order: %s\n" % e)
 
 
 def getQuote():
@@ -117,12 +107,70 @@ def scalpEmaStrategy():
 
     return {'True': 'True'}
 
+@app.route("/login", methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    print("username " ,username,password )
+    response = loginUser(username, password)
+    if(response == True):
+        return {'Login': 'True'}
+    else:
+        return  {'Login': 'False'}
 
-@app.route("/snapshot")
+# @app.route("/snapshot")
+@app.route("/snapshot", methods=['POST'])
 def snapshot():
-    download_csv_yahoo(nifty_50_companies_list, "2023-03-21",
-                       "2023-04-02", interval="15m", candle_stick_time="15min")
+    
+    data = request.json
+    start_date = data.get('start_date').split('T')[0]
+    end_date = data.get('end_date').split('T')[0]
+
+
+    print("data" , data)
+    print("start date" , start_date)
+    print("end_date" , end_date)
+
+    download_csv_yahoo(nifty_50_companies_list, start_date,
+                       end_date, interval="15m", candle_stick_time="15min")
+    # download_csv_yahoo(nifty_50_companies_list, "2023-05-21",
+    #                    "2023-05-29", interval="15m", candle_stick_time="15min")
     return {'Download': 'True'}
+
+
+@app.route("/getdetails")
+def getR_SDetails():
+
+    company_R_S_points = getStockPriceAnalysis(
+        nifty_50_companies_list, candle_stick_time="15min")
+    return company_R_S_points
+
+@app.route("/testall", methods=['POST'])
+# @app.route("/testall")
+def testAll():
+
+    data = request.json
+    start_date = data.get('start_date').split('T')[0]
+    end_date = data.get('end_date').split('T')[0]
+
+    # testMultipleHammerStocks(backtesthammer, columns,
+    #                          candle_stick_time="15min")
+
+    testMultipleHammerStocks(backtesthammer, columns, start_date, end_date,candle_stick_time="15min")
+    return {"success": 200}
+
+
+@app.route('/backtesthammer')
+def backtesthammer(company_name='', final_result='', name_index=0,start_date='', end_date=''):
+
+    # final_result = backtestHammerStrategy(
+    #     getR_SDetails, company_name, final_result, name_index=0, start='2023-05-30', end='2023-06-02', interval='1m')
+
+    print("backtest data" , start_date , end_date)
+    final_result = backtestHammerStrategy(
+        getR_SDetails, company_name, final_result, name_index=0, start=start_date, end=end_date, interval='1m')
+    return final_result
 
 
 @app.after_request
@@ -136,28 +184,8 @@ def add_header(response):
     return response
 
 
-@app.route("/getdetails")
-def getR_SDetails():
-
-    company_R_S_points = getStockPriceAnalysis(
-        nifty_50_companies_list, candle_stick_time="15min")
-    return company_R_S_points
 
 
-@app.route('/backtesthammer')
-def backtesthammer(company_name='', final_result='', name_index=0):
-
-    final_result = backtestHammerStrategy(
-        getR_SDetails, company_name, final_result, name_index=0, start='2023-04-03', end='2023-04-04', interval='1m')
-    return final_result
-
-
-@app.route("/testall")
-def testAll():
-
-    testMultipleHammerStocks(backtesthammer, columns,
-                             candle_stick_time="15min")
-    return {"success": 200}
 
 
 if __name__ == "__main__":

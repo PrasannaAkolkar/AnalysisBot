@@ -27,6 +27,8 @@ from db_config import setKeyValueRedis, getValueRedis
 import redis
 from upstox_api.api import *
 from scalp_ema import  signal_above_ema_short, check_ema_alert
-from bandl.yfinance import Yfinance
+#from bandl.yfinance import Yfinance
 from breeze_connect import BreezeConnect
 import urllib
+from flask_cors import CORS
+from login.login import loginUser

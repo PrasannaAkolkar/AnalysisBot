@@ -19,10 +19,10 @@ def download_csv_yahoo(nifty_50_companies_list,start, end, interval,candle_stick
                 print(row[0], row[1])
                 symbol = row[0]
                 # df = yf.download(tickers=symbol, period = time_period , interval=candle_stick_time_interval)
-                df = yf.download(tickers=symbol, start="2023-03-12", end="2023-03-20", interval="15m")
+                # df = yf.download(tickers=symbol, start="2023-03-12", end="2023-03-20", interval="15m")
                 
-                # df = yf.download(tickers=symbol, start=start,
-                #                   end=end ,interval=interval)
+                df = yf.download(tickers=symbol, start=start,
+                                  end=end ,interval=interval)
 
                 df.to_csv('dataset/{}/{}.csv'.format(candle_stick_time, symbol))
                 

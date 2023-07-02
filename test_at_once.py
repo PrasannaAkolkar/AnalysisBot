@@ -9,7 +9,7 @@ import pandas
 import os
 
 
-def testMultipleHammerStocks(backtesthammer,columns,candle_stick_time):
+def testMultipleHammerStocks(backtesthammer,columns,start_date,end_date,candle_stick_time):
     final_result = pandas.DataFrame(columns=columns)
     final_result_csv_df = pandas.DataFrame(columns=columns)
 
@@ -35,7 +35,7 @@ def testMultipleHammerStocks(backtesthammer,columns,candle_stick_time):
     name_index = 0
     
     for company_name in companyList:
-        concat_df = backtesthammer(company_name,final_result,name_index)
+        concat_df = backtesthammer(company_name,final_result,name_index,start_date, end_date)
         final_result_csv_df = pandas.concat([final_result_csv_df,concat_df],axis=0, ignore_index=True)
         print("concat df",final_result_csv_df)
         name_index+=1
