@@ -11,18 +11,19 @@ from myimports import *
 breeze = init_Icici_client()
 
 #get historical data
-#historical_data = getHistoricalDataICICI(breeze,"5minute", "2022-08-17T07:00:00.000Z" , "2022-08-17T07:00:00.000Z", "NIFTY","NSE","cash")
+historical_data = getHistoricalDataICICI(breeze,"1day", "2021-08-17" , "2022-08-18", "RELIND","NSE","cash")
 
-# print("df " , historical_data)
+print("df " , historical_data)
 
 # names = breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
 # print("Names" , names)
 
-print("funds ",breeze.get_funds())
+# print("funds ",breeze.get_funds())
 
 app = Flask(__name__)
 CORS(app)
-breeze.ws_connect()
+
+# breeze.ws_connect()
 
 # breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second")
 
@@ -30,6 +31,13 @@ breeze.ws_connect()
 #     print("Ticks: {}".format(ticks))
 # breeze.on_ticks = on_ticks
 
+# quote = breeze.get_quotes(stock_code="ICIBAN",
+#                     exchange_code="NFO",
+#                     product_type="options",
+#                     expiry_date="2023-07-27T06:00:00.000Z",
+#                      right="others"
+
+#                     )
 
 
 candle_stick_time = "15min"
@@ -39,6 +47,20 @@ candle_stick_time_interval = "15m"
 columns = ['Datetime', 'Company Name', 'Buy Price', 'Trade Type', 'Target Achieved',
            'Profit', 'Loss', 'SL']
 
+def get_dates():
+    
+    now = datetime.now()
+
+    # Format the current date and time as "YYYY-MM-DDTHH:MM:SS.000Z"
+    current_date = now.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+    # Calculate the date one year ago
+    one_year_ago = now - timedelta(days=365)
+
+    # Format the date one year ago as "YYYY-MM-DDTHH:MM:SS.000Z"
+    one_year_ago_date = one_year_ago.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+    return current_date, one_year_ago_date
 
 def run_every_five_seconds():
     print("inside")
@@ -139,6 +161,60 @@ def snapshot():
     return {'Download': 'True'}
 
 
+@app.route("/option-chain",methods=['POST'])
+def getOptionChain():
+
+    data = request.json
+    stock_code = data.get('stock_code')
+    expiry = data.get('expiry')
+    call_chain = breeze.get_option_chain_quotes(stock_code=stock_code,
+                    exchange_code="NFO",
+                    product_type="options",
+                    expiry_date=expiry,
+                    right="call")
+    
+    put_chain = breeze.get_option_chain_quotes(stock_code=stock_code,
+                    exchange_code="NFO",
+                    product_type="options",
+                    expiry_date=expiry,
+                    right="put")
+    
+
+    return [call_chain, put_chain]
+
+@app.route("/get-quote", methods=['POST'])
+def getQuote():
+    data = request.json
+    stock_code = data.get('stock_code')
+    quote = breeze.get_quotes(stock_code=stock_code,
+                    exchange_code="NSE"
+                    )
+    return quote
+
+@app.route("/portfolio-positions")
+def getPortfolioPositions():
+    return breeze.get_portfolio_positions()
+
+@app.route("/portfolio-holding")
+def getPortfolioHoldings():
+    return breeze.get_portfolio_holdings(exchange_code="NSE",portfolio_type="")
+
+@app.route('/historical-data',  methods=['POST'])
+def getHistoricalData():
+    today = get_dates()[0]
+    yearAgo = get_dates()[1]
+
+    data = request.json
+    stock_code = data.get('stock_code')
+
+    historical_data = breeze.get_historical_data_v2(interval="1day",
+                            from_date= yearAgo,
+                            to_date= today,
+                            stock_code=stock_code,
+                            exchange_code="NSE",
+                            product_type="cash")
+    print("hdata",historical_data)
+    return historical_data
 @app.route("/getdetails")
 def getR_SDetails():
 
@@ -147,7 +223,6 @@ def getR_SDetails():
     return company_R_S_points
 
 @app.route("/testall", methods=['POST'])
-# @app.route("/testall")
 def testAll():
 
     data = request.json
@@ -158,8 +233,12 @@ def testAll():
     #                          candle_stick_time="15min")
 
     testMultipleHammerStocks(backtesthammer, columns, start_date, end_date,candle_stick_time="15min")
+    # return send_file("results//final_result1.csv", as_attachment=True)
     return {"success": 200}
 
+@app.route('/downloadBacktestHammerCsv')
+def downloadBacktestHammerCsv():
+    return send_file("results//final_result1.csv", as_attachment=True)
 
 @app.route('/backtesthammer')
 def backtesthammer(company_name='', final_result='', name_index=0,start_date='', end_date=''):
@@ -182,6 +261,8 @@ def add_header(response):
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
     response.headers['Cache-Control'] = 'public, max-age=0'
     return response
+
+
 
 
 

@@ -28,6 +28,6 @@ def getIcici():
     creds = {
         "api_key":"$036u469~)94xC220004)1961M4@^V9n",
         "api_secret":"9C44#60159j04`d7516d4Z37yh5713I*",
-        "session_token":"14232526"
+        "session_token":"14811745"
     }
     return creds

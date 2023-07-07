@@ -4,7 +4,7 @@ https://stackoverflow.com/questions/13768007/browser-caching-issues-in-flask
 https://stackoverflow.com/questions/3811595/flask-werkzeug-how-to-attach-http-content-length-header-to-file-download
 to force reload on the web browser, Ctrl+F5
 https://api.icicidirect.com/apiuser/ICICIDirectAPIDOC.htm#sec-eqsepstocklist
-
+https://api.icicidirect.com/breezeapi/documents/index.html?python#getportfoliopositions
 
 
 
@@ -14,3 +14,15 @@ Allow user to place an order from the website for stocks, options etc
 Allow user to create a wishlist of stocks to watch
 The wishlist must continously make a call to the icici api to show the latest prices
 Download and visualize the backtested data
+
+
+
+Place Order Page Features:
+
+1 - Select Stock/Index
+2 - Select Instrument Type
+3 - Show option chain (collapsable) - OI, LTP, Strike (FOR CALL AND PUT)
+4 - Show Stock details like: LTP, NSE/BSE, High, Low,ltt,total traded quantity
+5 - Place Order Button (with a popup to take details)
+6 - Get Current Positions (Show all active positions with profit and loss)
+7 - Square off positions

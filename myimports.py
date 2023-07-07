@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime,timedelta
 import time
 import threading
 # from jugaad_data.nse import NSELive
@@ -7,7 +7,7 @@ import csv
 # import talib
 import yfinance as yf
 import pandas
-from flask import Flask, escape, request, render_template
+from flask import Flask, escape, request, render_template,send_file
 from c_pattern import candlestick_patterns
 import plotly.graph_objects as go
 from hammering_support_resistance_scalping import resistance_points_dict, support_points_dict
