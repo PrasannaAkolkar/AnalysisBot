@@ -52,7 +52,7 @@ def get_dates():
     now = datetime.now()
 
     # Format the current date and time as "YYYY-MM-DDTHH:MM:SS.000Z"
-    current_date = now.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    current_date = now.strftime("%Y-%m-%dT%H:%M:%S.000Z") 
 
     # Calculate the date one year ago
     one_year_ago = now - timedelta(days=365)
@@ -193,10 +193,11 @@ def getQuote():
 
 @app.route("/portfolio-positions")
 def getPortfolioPositions():
-    return breeze.get_portfolio_positions()
+    return [breeze.get_portfolio_positions(), breeze.get_portfolio_holdings(exchange_code="NSE",portfolio_type="")]
 
 @app.route("/portfolio-holding")
 def getPortfolioHoldings():
+    print(breeze.get_portfolio_holdings(exchange_code="NSE",portfolio_type=""))
     return breeze.get_portfolio_holdings(exchange_code="NSE",portfolio_type="")
 
 @app.route('/historical-data',  methods=['POST'])
@@ -205,6 +206,7 @@ def getHistoricalData():
     yearAgo = get_dates()[1]
 
     data = request.json
+    print("data" , today)
     stock_code = data.get('stock_code')
 
     historical_data = breeze.get_historical_data_v2(interval="1day",
@@ -213,7 +215,7 @@ def getHistoricalData():
                             stock_code=stock_code,
                             exchange_code="NSE",
                             product_type="cash")
-    print("hdata",historical_data)
+    # print("hdata",historical_data)
     return historical_data
 @app.route("/getdetails")
 def getR_SDetails():
@@ -270,4 +272,4 @@ def add_header(response):
 
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5000, debug=True)

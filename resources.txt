@@ -16,7 +16,6 @@ The wishlist must continously make a call to the icici api to show the latest pr
 Download and visualize the backtested data
 
 
-
 Place Order Page Features:
 
 1 - Select Stock/Index
