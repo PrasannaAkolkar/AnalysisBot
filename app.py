@@ -208,7 +208,7 @@ def getHistoricalData():
     data = request.json
     print("data" , today)
     stock_code = data.get('stock_code')
-
+    
     historical_data = breeze.get_historical_data_v2(interval="1day",
                             from_date= yearAgo,
                             to_date= today,
@@ -217,6 +217,27 @@ def getHistoricalData():
                             product_type="cash")
     # print("hdata",historical_data)
     return historical_data
+
+@app.route('/ta-data', methods=['POST'])
+def technicalAnalysis():
+
+    today = get_dates()[0]
+    yearAgo=get_dates()[1]
+
+    data = request.json
+    print("data" , today)
+    stock_code = data.get('stock_code')
+
+    historical_data = breeze.get_historical_data_v2(interval="1day",
+                            from_date= yearAgo,
+                            to_date= today,
+                            stock_code=stock_code,
+                            exchange_code="NSE",
+                            product_type="cash")
+    
+    df = pandas.DataFrame(historical_data['Success'])
+    return ta_values(df)
+
 @app.route("/getdetails")
 def getR_SDetails():
 

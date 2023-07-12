@@ -32,3 +32,4 @@ from breeze_connect import BreezeConnect
 import urllib
 from flask_cors import CORS
 from login.login import loginUser
+from utils.technicalAnalysis import ta_values
