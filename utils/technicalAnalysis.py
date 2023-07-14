@@ -41,19 +41,6 @@ def ta_values(data):
     # Compare volatility of the last 30 days with the last 3 days
     volatility_comparison = 'Higher' if last_3_days_volatility > last_30_days_volatility else 'Lower'
 
-    # Print the trend and analysis results
-    print("Trend: ", trend)
-    print("Average Volatility (Entire DataFrame): ", avg_volatility)
-    print("Volatility (Last 30 Days): ", last_30_days_volatility)
-    print("Volatility (Last 3 Days): ", last_3_days_volatility)
-    print("Volatility Comparison (Last 30 vs. Last 3 Days): ", volatility_comparison)
-    print("Volume EMA: ", data['volume_sma'].iloc[-1])
-    print("Current Volume vs. Volume SMA: ", data['volume'].iloc[-1] > data['volume_sma'].iloc[-1])
-    print("RSI: ", data['rsi'].iloc[-1])
-    print("Stochastic Oscillator: ", data['stoch'].iloc[-1])
-    print("Current Vol:", data['volume'].iloc[-1])
-    print("Golden Crossover: ", golden_crossover)
-
     # Calculate the changes in RSI and Stochastic Oscillator
     rsi_change = data['rsi'].iloc[-1] - data['rsi'].iloc[-2]
     stoch_change = data['stoch'].iloc[-1] - data['stoch'].iloc[-2]
@@ -62,9 +49,13 @@ def ta_values(data):
     rsi_trend = 'Overbought' if data['rsi'].iloc[-1] > 70 else 'Oversold'
     stoch_trend = 'Overbought' if data['stoch'].iloc[-1] > 80 else 'Oversold'
 
-    # Print the trends for RSI and Stochastic Oscillator
-    print("RSI Trend: ", rsi_trend)
-    print("Stochastic Trend: ", stoch_trend)
+    average_volume = data['volume'].mean()
+
+    # Calculate the average volume of the last 3 days
+    last_3_days_volume = data['volume'].tail(3).mean()
+
+    # Compare the average volume with the average volume of the last 3 days
+    volume_comparison = 'Higher' if average_volume > last_3_days_volume else 'Lower'
 
     # Check for positive and negative divergence
     if (
@@ -84,8 +75,6 @@ def ta_values(data):
     else:
         divergence = 'No Divergence'
 
-    # Print the divergence for the last day
-    print("Last Day's Divergence:", divergence)
 
     return {
         "trend": trend,
@@ -100,7 +89,9 @@ def ta_values(data):
         "stoch": data['stoch'].iloc[-1],
         "stoch_trend": stoch_trend,
         "divergence": divergence,
-        "golden_crossover": str(golden_crossover)
+        "golden_crossover": str(golden_crossover),
+        "ema": data['ema200'].iloc[-1],
+        "volume_comparison":volume_comparison
     }
 
 stock_symbol = 'RELIANCE.NS'

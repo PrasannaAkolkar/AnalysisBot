@@ -25,3 +25,11 @@ Place Order Page Features:
 5 - Place Order Button (with a popup to take details)
 6 - Get Current Positions (Show all active positions with profit and loss)
 7 - Square off positions
+
+
+
+
+Some trading strategies:
+
+1 - after 1 hour, as soon as the low or high of the day breaks, take a position in that direction. Make sure that on 15 min timeframe, the entire candle is formed after the support or resistance.
+15 % of the entire body must be the wick. SL - breakout candle. Target - Trailing after 1:1
