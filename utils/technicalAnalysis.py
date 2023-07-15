@@ -2,12 +2,6 @@
 import yfinance as yf
 import ta
 
-import pandas as pd
-import ta
-
-import pandas as pd
-import ta
-
 def ta_values(data):
     # Calculate the necessary indicators
     data['ema50'] = ta.trend.ema_indicator(data['close'], window=50)

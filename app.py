@@ -238,6 +238,27 @@ def technicalAnalysis():
     df = pandas.DataFrame(historical_data['Success'])
     return ta_values(df)
 
+@app.route('/nifty-historical')
+def niftyHistorical():
+
+    temp_list = []
+    stock_code = 'NIFTY'
+
+    historical_data = breeze.get_historical_data_v2(interval="1minute",
+                            from_date= "2022-08-03T06:00:00.000Z",
+                            to_date= "2022-08-04T06:00:00.000Z",
+                            stock_code=stock_code,
+                            exchange_code="NSE",
+                            product_type="cash")
+    
+    for obj in historical_data['Success']:
+        # print(obj['close'])
+        temp_list.append(obj['close'])
+
+    count = simulate_trades(temp_list)
+    print("successful net is" , count)
+    return {"Net Profit/Loss":str(count)}
+
 @app.route("/getdetails")
 def getR_SDetails():
 
