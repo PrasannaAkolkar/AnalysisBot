@@ -1,23 +1,3 @@
-def create_levels(base_level):
-    point_five_levels = []
-    gap = 63
-    num_levels = 100
-
-    for i in range(num_levels, 0, -1):
-        level = base_level - (i * gap)
-        point_five_levels.append(level)
-
-    point_five_levels.append(base_level)
-
-    for i in range(1, num_levels + 1):
-        level = base_level + (i * gap)
-        point_five_levels.append(level)
-
-    return point_five_levels
-
-#base_level = 17800
-# point_five_levels = create_levels(base_level)
-
 def nifty_point_five_levels():
 
     nifty = [11500, 11563, 11626, 11689, 11752, 11815, 11878, 11941, 12004, 12067, 12130, 12193, 12256, 12319, 12382, 
@@ -31,51 +11,9 @@ def nifty_point_five_levels():
                 22084, 22147, 22210, 22273, 22336, 22399, 22462, 22525, 22588, 22651, 22714, 22777, 
                 22840, 22903, 22966, 23029, 23092, 23155, 23218, 23281, 23344, 23407, 23470, 23533, 23596, 23659, 23722, 23785, 23848, 23911, 23974, 24037, 24100]
 
-
-    # print(nifty)
     return nifty
-nifty_point_five_levels()
 
-import time
-
-def check_trade(stock_price=00):
-    while True:
-        # Get the current stock price
-        stock_price = 17798  # Replace with your code to fetch the stock price
-        nifty_levels = nifty_point_five_levels()
-        # Find the nearest Nifty level
-        nifty_value = min(nifty_levels, key=lambda x: abs(x - stock_price))
-
-        # Calculate the tolerance value
-        tolerance = nifty_value * 0.0005
-
-        # Check if the stock price is within the tolerance range
-        if abs(stock_price - nifty_value) <= tolerance:
-            print("0.5 trade can be taken")
-        else:
-            pass
-
-        # Wait for 2 minutes
-        time.sleep(120)
-
-
-def checkPoint5Trade(priceListClose):
-    count = 0
-    nifty_levels = nifty_point_five_levels()
-    for stock_price in priceListClose:
-        nifty_value = min(nifty_levels, key=lambda x: abs(x - stock_price))
-
-        tolerance = nifty_value * 0.0005
-
-        if abs(stock_price - nifty_value) <= tolerance:
-            print("0.5 trade can be taken")
-            count = count + 1
-    
-    return count
-
-# import time
-
-def simulate_trades(stock_prices):
+def simulate_trades_point5(stock_prices):
     nifty_levels = nifty_point_five_levels()
     successful_trades = 0
     unsuccessful_trades = 0
@@ -126,9 +64,13 @@ def simulate_trades(stock_prices):
                 if stock_price >= target - tolerance:
                     total_prof = total_prof + (target-tolerance-buy_price)
                     successful_trades += 1
+                    # if(successful_trades > 0):
+                    #     break
                 else:
                     unsuccessful_trades += 1
                     total_loss = total_loss + 10
+                    # if(unsuccessful_trades >2):
+                    #     break
         if in_trade and trade_type=="sell":
             if ((stock_price <= target + tolerance) or (stock_price >= stop_loss_level)):
                 # print(type(stock_price) , type(target), type(tolerance) , type(stop_loss_level))
@@ -143,13 +85,15 @@ def simulate_trades(stock_prices):
                 if stock_price <= target + tolerance:
                     total_prof = total_prof + (sell_price - target + tolerance)
                     successful_trades += 1
+                    # if(successful_trades > 0):
+                    #     break
                 else:
                     unsuccessful_trades += 1
                     total_loss = total_loss + 10
+                    # if(unsuccessful_trades >2):
+                    #     break
         if in_trade and trade_type == "":
             print("please ignore")
-
-        # time.sleep(2)  # Wait for 2 seconds before checking the next stock price
 
     print("profit Trades: " , total_prof)
     print("loss Trades: " ,total_loss)
@@ -168,3 +112,25 @@ def simulate_trades(stock_prices):
 
 
 # check_trade(nifty_point_five_levels())
+
+'''
+def create_levels(base_level):
+    point_five_levels = []
+    gap = 63
+    num_levels = 100
+
+    for i in range(num_levels, 0, -1):
+        level = base_level - (i * gap)
+        point_five_levels.append(level)
+
+    point_five_levels.append(base_level)
+
+    for i in range(1, num_levels + 1):
+        level = base_level + (i * gap)
+        point_five_levels.append(level)
+
+    return point_five_levels
+
+#base_level = 17800
+# point_five_levels = create_levels(base_level)
+'''

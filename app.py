@@ -13,7 +13,7 @@ breeze = init_Icici_client()
 #get historical data
 historical_data = getHistoricalDataICICI(breeze,"1day", "2021-08-17" , "2022-08-18", "RELIND","NSE","cash")
 
-print("df " , historical_data)
+# print("df " , historical_data)
 
 # names = breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
 # print("Names" , names)
@@ -245,17 +245,17 @@ def niftyHistorical():
     stock_code = 'NIFTY'
 
     historical_data = breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2022-08-03T06:00:00.000Z",
-                            to_date= "2022-08-04T06:00:00.000Z",
+                            from_date= "2022-08-05T03:30:00.000Z",
+                            to_date= "2022-08-06T03:30:00.000Z",
                             stock_code=stock_code,
                             exchange_code="NSE",
                             product_type="cash")
-    
+    # print(historical_data['Success'])
     for obj in historical_data['Success']:
         # print(obj['close'])
         temp_list.append(obj['close'])
 
-    count = simulate_trades(temp_list)
+    count = simulate_trades_point5(temp_list)
     print("successful net is" , count)
     return {"Net Profit/Loss":str(count)}
 

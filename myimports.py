@@ -33,4 +33,4 @@ import urllib
 from flask_cors import CORS
 from login.login import loginUser
 from utils.technicalAnalysis import ta_values
-from point5 import checkPoint5Trade, simulate_trades
+from point5 import simulate_trades_point5
