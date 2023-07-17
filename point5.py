@@ -13,10 +13,11 @@ def nifty_point_five_levels():
 
     return nifty
 
-def simulate_trades_point5(stock_prices):
+import csv
+
+def simulate_trades_point5(date_stock_dict):
     nifty_levels = nifty_point_five_levels()
-    successful_trades = 0
-    unsuccessful_trades = 0
+    trades = []
     in_trade = False
     stop_loss = 10
     trade_type = ""
@@ -24,81 +25,76 @@ def simulate_trades_point5(stock_prices):
     total_loss = 0
     buy_price = 0
     sell_price = 0
+    stop_loss_level = 0
+    count =0 
 
-    for stock_price in stock_prices:
+    # print("datetime list" , datetime_list)
+
+    for time,stock_price in date_stock_dict.items():
+        count = count + 1
+        # print(time)
         nifty_value = min(nifty_levels, key=lambda x: abs(x - stock_price))
         tolerance = nifty_value * 0.0005
 
         if in_trade:
-            print("Already in trade.. don't take a new trade")
+            pass
         else:
-            if stock_price<= nifty_value + tolerance and stock_price >= nifty_value:
-                print("Buy trade taken. Price: " + str(stock_price))
+            if stock_price <= nifty_value + tolerance and stock_price >= nifty_value:
                 buy_price = stock_price
                 trade_type = "buy"
                 target = min([level for level in nifty_levels if level > nifty_value])
-                print("Target will be", target)
-                print("Profit will be", target-stock_price)
                 stop_loss_level = nifty_value - stop_loss
-                print("StopLoss will be", stop_loss_level)
                 in_trade = True
             elif stock_price >= nifty_value - tolerance and stock_price <= nifty_value:
-                print("Sell trade taken. Price: " + str(stock_price))
-                print("sell trade" , [level for level in nifty_levels])
                 sell_price = stock_price
                 trade_type = "sell"
                 target = max([level for level in nifty_levels if level < nifty_value])
-                print("Target will be", target)
-                print("Profit will be", abs(target-stock_price))
                 stop_loss_level = nifty_value + stop_loss
-                print("StopLoss will be", stop_loss_level)
                 in_trade = True
             else:
-                print("sorry cannot take a trade for " , stock_price)
+                # print("Sorry, cannot take a trade for", stock_price)
+                pass
 
-        if in_trade and trade_type=="buy":
+        if in_trade and trade_type == "buy":
             if stock_price >= target - tolerance or stock_price <= stop_loss_level:
-                print("Buy Trade sqaure off completed. Price: " + str(stock_price))
+                print("Buy Trade square off completed. Price: " + str(stock_price))
                 in_trade = False
                 trade_type = ""
                 if stock_price >= target - tolerance:
-                    total_prof = total_prof + (target-tolerance-buy_price)
-                    successful_trades += 1
-                    # if(successful_trades > 0):
-                    #     break
+                    profit = target - tolerance - buy_price
+                    total_prof += profit
+                    trades.append({'trade type': 'buy','trade_taken_at':str(time) ,'trade price': buy_price, 'trade squareoff price': target - tolerance, 'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level})
                 else:
-                    unsuccessful_trades += 1
-                    total_loss = total_loss + 10
-                    # if(unsuccessful_trades >2):
-                    #     break
-        if in_trade and trade_type=="sell":
-            if ((stock_price <= target + tolerance) or (stock_price >= stop_loss_level)):
-                # print(type(stock_price) , type(target), type(tolerance) , type(stop_loss_level))
-                # print("stock less than target plus toll",(stock_price <= target + tolerance))
-                # print("stock_price more than sl level",(stock_price >= stop_loss_level))
-                # print("sell stock price" , stock_price)
-                # print("sell target level" , target + tolerance)
-                # print("sell stop_loss_level" , stop_loss_level)
-                # print("Sell Trade sqaure off completed. Price: " + str(stock_price))
+                    trades.append({'trade type': 'buy','trade_taken_at':str(time) , 'trade price': buy_price, 'trade squareoff price': stock_price, 'trade profit': 0, 'trade loss': stop_loss, 'stoploss level': stop_loss_level})
+                    total_loss += stop_loss
+        if in_trade and trade_type == "sell":
+            if stock_price <= target + tolerance or stock_price >= stop_loss_level:
                 in_trade = False
                 trade_type = ""
                 if stock_price <= target + tolerance:
-                    total_prof = total_prof + (sell_price - target + tolerance)
-                    successful_trades += 1
-                    # if(successful_trades > 0):
-                    #     break
+                    profit = sell_price - target + tolerance
+                    total_prof += profit
+                    trades.append({'trade type': 'sell','trade_taken_at':str(time) , 'trade price': sell_price, 'trade squareoff price': target + tolerance, 'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level})
                 else:
-                    unsuccessful_trades += 1
-                    total_loss = total_loss + 10
-                    # if(unsuccessful_trades >2):
-                    #     break
+                    trades.append({'trade type': 'sell','trade_taken_at':str(time) , 'trade price': sell_price, 'trade squareoff price': stock_price, 'trade profit': 0, 'trade loss': stop_loss, 'stoploss level': stop_loss_level})
+                    total_loss += stop_loss
+
         if in_trade and trade_type == "":
-            print("please ignore")
+            print("Please ignore")
 
-    print("profit Trades: " , total_prof)
-    print("loss Trades: " ,total_loss)
-    return (total_prof - total_loss)
+    print("Profit Trades:", total_prof)
+    print("Loss Trades:", total_loss)
+    print("Net profit for one lot" , (total_prof-total_loss)/2*50)
+    # Write trades to CSV file
+    output_file = 'trades.csv'
+    fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_taken_at']
 
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(trades)
+
+    return total_prof - total_loss
 
 
 

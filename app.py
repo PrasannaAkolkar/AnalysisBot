@@ -241,21 +241,26 @@ def technicalAnalysis():
 @app.route('/nifty-historical')
 def niftyHistorical():
 
-    temp_list = []
+    price_list = []
+    date_time_list = []
     stock_code = 'NIFTY'
 
     historical_data = breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2022-08-05T03:30:00.000Z",
-                            to_date= "2022-08-06T03:30:00.000Z",
+                            from_date= "2023-07-17T03:00:00.000Z",
+                            to_date= "2023-07-18T03:00:00.000Z",
                             stock_code=stock_code,
                             exchange_code="NSE",
                             product_type="cash")
     # print(historical_data['Success'])
+    print(historical_data)
     for obj in historical_data['Success']:
         # print(obj['close'])
-        temp_list.append(obj['close'])
+        price_list.append(obj['close'])
+        date_time_list.append(obj['datetime'])
 
-    count = simulate_trades_point5(temp_list)
+    my_dict = {k: v for k, v in zip(date_time_list, price_list)}
+    print("dict" , my_dict)
+    count = simulate_trades_point5(my_dict)
     print("successful net is" , count)
     return {"Net Profit/Loss":str(count)}
 
