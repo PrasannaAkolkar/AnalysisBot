@@ -15,7 +15,7 @@ def nifty_point_five_levels():
 
 import csv
 
-def simulate_trades_point5(date_stock_dict):
+def simulate_trades_point5(date_stock_dict,trades_array):
     nifty_levels = nifty_point_five_levels()
     trades = []
     in_trade = False
@@ -32,7 +32,6 @@ def simulate_trades_point5(date_stock_dict):
     take_position_time = 0
     profitable_trade_count = 0
     loss_trade_count = 0
-    # file_name_convention = str(list(date_stock_dict.keys())[0].split(' ')[0]+"-trades.csv")
 
     filename = ""
 
@@ -113,16 +112,9 @@ def simulate_trades_point5(date_stock_dict):
     print("Profit Trades:", total_prof)
     print("Loss Trades:", total_loss)
     print("Net profit for one lot" , (total_prof-total_loss)/2*50)
-    # Write trades to CSV file
-    # output_file = 'point5_results/'+file_name_convention
-    fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_exit_at','trade__taken_near_level (support/resistance)','trade_taken_at']
 
-    # with open(output_file, 'w', newline='') as csvfile:
-    #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    #     writer.writeheader()
-    #     writer.writerows(trades)
-
-    return total_prof - total_loss
+    trades_array.extend(trades)
+    return [trades_array,total_prof-total_loss]
 
 
 

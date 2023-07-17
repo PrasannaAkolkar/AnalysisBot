@@ -243,13 +243,14 @@ def technicalAnalysis():
 
 @app.route('/nifty-historical')
 def niftyHistorical():
-    from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
+    
     # from_dates = get_dates_between("2023-07-01T03:00:00.000Z", "2023-07-30T03:00:00.000Z")
-    # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-30T03:00:00.000Z")
+    from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
-    # from_dates = get_dates_between("2023-03-01T03:00:00.000Z", "2023-03-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-03-01T03:00:00.000Z", "2023-03-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-02-01T03:00:00.000Z", "2023-02-28T03:00:00.000Z")
-    # from_dates = get_dates_between("2023-01-01T03:00:00.000Z", "2023-01-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-01-01T03:00:00.000Z", "2023-01-31T03:00:00.000Z")
     to_dates = [
     (datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.000Z") + timedelta(days=1))
     .strftime("%Y-%m-%dT%H:%M:%S.000Z")
@@ -257,11 +258,13 @@ def niftyHistorical():
 
     print("from data" , from_dates)
     print("data",to_dates)
-    
+
     price_list = []
     date_time_list = []
+    trades_array = []
     stock_code = 'NIFTY'
-    netProfits_Lossess = 0
+    net_profit_loss = 0
+    net_profit_loss_total = 0
     for i in range(len(from_dates)):
         print("i" , i)
         historical_data = breeze.get_historical_data_v2(interval="1minute",
@@ -276,13 +279,19 @@ def niftyHistorical():
             date_time_list.append(obj['datetime'])
 
         my_dict = {k: v for k, v in zip(date_time_list[40:], price_list[40:])}
-
-        count = simulate_trades_point5(my_dict)
-        print("successful net is" , count)
-        netProfits_Lossess+=count
+        trades_array, net_profit_loss = simulate_trades_point5(my_dict,trades_array)
+        net_profit_loss_total+=net_profit_loss
         price_list = []
         date_time_list = []
-    return {"Code":str(netProfits_Lossess)}
+        
+    output_file = 'point5_results/trades.csv'
+    fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_exit_at','trade__taken_near_level (support/resistance)','trade_taken_at']
+
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(trades_array)
+    return {"Code":str(net_profit_loss_total)}
 
 @app.route("/getdetails")
 def getR_SDetails():
