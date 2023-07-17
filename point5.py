@@ -30,13 +30,16 @@ def simulate_trades_point5(date_stock_dict):
     nifty_value = 0
     take_position_tolerance = 5 
     take_position_time = 0
+    profitable_trade_count = 0
+    loss_trade_count = 0
+    # file_name_convention = str(list(date_stock_dict.keys())[0].split(' ')[0]+"-trades.csv")
 
+    filename = ""
 
-    # print("datetime list" , datetime_list)
 
     for time,stock_price in date_stock_dict.items():
+        filename = str(time).split(' ')[0] + 'trades.csv'
         count = count + 1
-        # print(time)
         nifty_value = min(nifty_levels, key=lambda x: abs(x - stock_price))
         tolerance = nifty_value * 0.0005
 
@@ -58,7 +61,6 @@ def simulate_trades_point5(date_stock_dict):
                 stop_loss_level = nifty_value + stop_loss
                 in_trade = True
             else:
-                # print("Sorry, cannot take a trade for", stock_price)
                 pass
 
         if in_trade and trade_type == "buy":
@@ -72,12 +74,17 @@ def simulate_trades_point5(date_stock_dict):
                     trades.append({'trade type': 'buy','trade_exit_at':str(time) ,'trade price': buy_price, 'trade squareoff price': stock_price, 
                                    'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level, 
                                    'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - buy_price)), 'trade_taken_at':take_position_time})
+                    profitable_trade_count = profitable_trade_count + 1
+                    break
                 else:
                     trades.append({'trade type': 'buy','trade_exit_at':str(time) , 'trade price': buy_price, 'trade squareoff price': stock_price, 
                                    'trade profit': 0, 'trade loss': buy_price-stop_loss_level, 'stoploss level': stop_loss_level, 
                                    'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - buy_price)), 'trade_taken_at':take_position_time})
                     
                     total_loss += (buy_price-stop_loss_level)
+                    loss_trade_count+=1
+                    if(loss_trade_count >2):
+                        break
         if in_trade and trade_type == "sell":
             if stock_price <= target + tolerance or stock_price >= stop_loss_level:
                 in_trade = False
@@ -88,26 +95,32 @@ def simulate_trades_point5(date_stock_dict):
                     trades.append({'trade type': 'sell','trade_exit_at':str(time) , 'trade price': sell_price, 'trade squareoff price': stock_price,
                                     'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level, 
                                     'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - sell_price)), 'trade_taken_at':take_position_time})
+                    profitable_trade_count = profitable_trade_count + 1
+                    break
                 else:
                     trades.append({'trade type': 'sell','trade_exit_at':str(time) , 'trade price': sell_price, 'trade squareoff price': stock_price, 'trade profit': 0,
                                     'trade loss': stop_loss_level-sell_price, 'stoploss level': stop_loss_level, 
                                     'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - sell_price)), 'trade_taken_at':take_position_time})
                     total_loss += (stop_loss_level-sell_price)
+                    loss_trade_count+=1
+                    if(loss_trade_count >2):
+                        break
 
         if in_trade and trade_type == "":
             print("Please ignore")
 
+    print("date",filename)
     print("Profit Trades:", total_prof)
     print("Loss Trades:", total_loss)
     print("Net profit for one lot" , (total_prof-total_loss)/2*50)
     # Write trades to CSV file
-    output_file = 'trades.csv'
+    # output_file = 'point5_results/'+file_name_convention
     fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_exit_at','trade__taken_near_level (support/resistance)','trade_taken_at']
 
-    with open(output_file, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(trades)
+    # with open(output_file, 'w', newline='') as csvfile:
+    #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    #     writer.writeheader()
+    #     writer.writerows(trades)
 
     return total_prof - total_loss
 

@@ -50,18 +50,21 @@ columns = ['Datetime', 'Company Name', 'Buy Price', 'Trade Type', 'Target Achiev
 def get_dates():
     
     now = datetime.now()
-
-    # Format the current date and time as "YYYY-MM-DDTHH:MM:SS.000Z"
     current_date = now.strftime("%Y-%m-%dT%H:%M:%S.000Z") 
-
-    # Calculate the date one year ago
     one_year_ago = now - timedelta(days=365)
-
-    # Format the date one year ago as "YYYY-MM-DDTHH:MM:SS.000Z"
     one_year_ago_date = one_year_ago.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
     return current_date, one_year_ago_date
 
+def get_dates_between(start_date, end_date):
+    date_format = "%Y-%m-%dT%H:%M:%S.000Z"
+    dates = []
+    start = datetime.strptime(start_date, date_format)
+    end = datetime.strptime(end_date, date_format)
+    current = start
+    while current <= end:
+        dates.append(current.strftime(date_format))
+        current += timedelta(days=1)
+    return dates
 def run_every_five_seconds():
     print("inside")
     while True:
@@ -240,29 +243,46 @@ def technicalAnalysis():
 
 @app.route('/nifty-historical')
 def niftyHistorical():
+    from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-07-01T03:00:00.000Z", "2023-07-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-03-01T03:00:00.000Z", "2023-03-30T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-02-01T03:00:00.000Z", "2023-02-28T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-01-01T03:00:00.000Z", "2023-01-30T03:00:00.000Z")
+    to_dates = [
+    (datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.000Z") + timedelta(days=1))
+    .strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    for date_str in from_dates]
 
+    print("from data" , from_dates)
+    print("data",to_dates)
+    
     price_list = []
     date_time_list = []
     stock_code = 'NIFTY'
+    netProfits_Lossess = 0
+    for i in range(len(from_dates)):
+        print("i" , i)
+        historical_data = breeze.get_historical_data_v2(interval="1minute",
+                                from_date= str(from_dates[i]),
+                                to_date= str(to_dates[i]),
+                                stock_code=stock_code,
+                                exchange_code="NSE",
+                                product_type="cash")
+        
+        for obj in historical_data['Success']:
+            price_list.append(obj['close'])
+            date_time_list.append(obj['datetime'])
 
-    historical_data = breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2023-07-13T03:00:00.000Z",
-                            to_date= "2023-07-14T03:00:00.000Z",
-                            stock_code=stock_code,
-                            exchange_code="NSE",
-                            product_type="cash")
-    # print(historical_data['Success'])
-    print(historical_data)
-    for obj in historical_data['Success']:
-        # print(obj['close'])
-        price_list.append(obj['close'])
-        date_time_list.append(obj['datetime'])
+        my_dict = {k: v for k, v in zip(date_time_list[40:], price_list[40:])}
 
-    my_dict = {k: v for k, v in zip(date_time_list, price_list)}
-    print("dict" , my_dict)
-    count = simulate_trades_point5(my_dict)
-    print("successful net is" , count)
-    return {"Net Profit/Loss":str(count)}
+        count = simulate_trades_point5(my_dict)
+        print("successful net is" , count)
+        netProfits_Lossess+=count
+        price_list = []
+        date_time_list = []
+    return {"Code":str(netProfits_Lossess)}
 
 @app.route("/getdetails")
 def getR_SDetails():
