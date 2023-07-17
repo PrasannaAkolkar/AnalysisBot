@@ -246,8 +246,8 @@ def niftyHistorical():
     stock_code = 'NIFTY'
 
     historical_data = breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2023-07-17T03:00:00.000Z",
-                            to_date= "2023-07-18T03:00:00.000Z",
+                            from_date= "2023-07-13T03:00:00.000Z",
+                            to_date= "2023-07-14T03:00:00.000Z",
                             stock_code=stock_code,
                             exchange_code="NSE",
                             product_type="cash")

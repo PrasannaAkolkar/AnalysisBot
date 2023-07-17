@@ -26,7 +26,11 @@ def simulate_trades_point5(date_stock_dict):
     buy_price = 0
     sell_price = 0
     stop_loss_level = 0
-    count =0 
+    count =0
+    nifty_value = 0
+    take_position_tolerance = 5 
+    take_position_time = 0
+
 
     # print("datetime list" , datetime_list)
 
@@ -39,16 +43,18 @@ def simulate_trades_point5(date_stock_dict):
         if in_trade:
             pass
         else:
-            if stock_price <= nifty_value + tolerance and stock_price >= nifty_value:
+            if stock_price <= nifty_value + take_position_tolerance and stock_price >= nifty_value:
                 buy_price = stock_price
                 trade_type = "buy"
+                take_position_time = time
                 target = min([level for level in nifty_levels if level > nifty_value])
                 stop_loss_level = nifty_value - stop_loss
                 in_trade = True
-            elif stock_price >= nifty_value - tolerance and stock_price <= nifty_value:
+            elif stock_price >= nifty_value - take_position_tolerance and stock_price <= nifty_value:
                 sell_price = stock_price
                 trade_type = "sell"
                 target = max([level for level in nifty_levels if level < nifty_value])
+                take_position_time = time
                 stop_loss_level = nifty_value + stop_loss
                 in_trade = True
             else:
@@ -61,23 +67,32 @@ def simulate_trades_point5(date_stock_dict):
                 in_trade = False
                 trade_type = ""
                 if stock_price >= target - tolerance:
-                    profit = target - tolerance - buy_price
+                    profit = stock_price - buy_price
                     total_prof += profit
-                    trades.append({'trade type': 'buy','trade_taken_at':str(time) ,'trade price': buy_price, 'trade squareoff price': target - tolerance, 'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level})
+                    trades.append({'trade type': 'buy','trade_exit_at':str(time) ,'trade price': buy_price, 'trade squareoff price': stock_price, 
+                                   'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level, 
+                                   'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - buy_price)), 'trade_taken_at':take_position_time})
                 else:
-                    trades.append({'trade type': 'buy','trade_taken_at':str(time) , 'trade price': buy_price, 'trade squareoff price': stock_price, 'trade profit': 0, 'trade loss': stop_loss, 'stoploss level': stop_loss_level})
-                    total_loss += stop_loss
+                    trades.append({'trade type': 'buy','trade_exit_at':str(time) , 'trade price': buy_price, 'trade squareoff price': stock_price, 
+                                   'trade profit': 0, 'trade loss': buy_price-stop_loss_level, 'stoploss level': stop_loss_level, 
+                                   'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - buy_price)), 'trade_taken_at':take_position_time})
+                    
+                    total_loss += (buy_price-stop_loss_level)
         if in_trade and trade_type == "sell":
             if stock_price <= target + tolerance or stock_price >= stop_loss_level:
                 in_trade = False
                 trade_type = ""
                 if stock_price <= target + tolerance:
-                    profit = sell_price - target + tolerance
+                    profit = sell_price - stock_price
                     total_prof += profit
-                    trades.append({'trade type': 'sell','trade_taken_at':str(time) , 'trade price': sell_price, 'trade squareoff price': target + tolerance, 'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level})
+                    trades.append({'trade type': 'sell','trade_exit_at':str(time) , 'trade price': sell_price, 'trade squareoff price': stock_price,
+                                    'trade profit': profit, 'trade loss': 0, 'stoploss level': stop_loss_level, 
+                                    'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - sell_price)), 'trade_taken_at':take_position_time})
                 else:
-                    trades.append({'trade type': 'sell','trade_taken_at':str(time) , 'trade price': sell_price, 'trade squareoff price': stock_price, 'trade profit': 0, 'trade loss': stop_loss, 'stoploss level': stop_loss_level})
-                    total_loss += stop_loss
+                    trades.append({'trade type': 'sell','trade_exit_at':str(time) , 'trade price': sell_price, 'trade squareoff price': stock_price, 'trade profit': 0,
+                                    'trade loss': stop_loss_level-sell_price, 'stoploss level': stop_loss_level, 
+                                    'trade__taken_near_level (support/resistance)':min(nifty_levels, key=lambda x: abs(x - sell_price)), 'trade_taken_at':take_position_time})
+                    total_loss += (stop_loss_level-sell_price)
 
         if in_trade and trade_type == "":
             print("Please ignore")
@@ -87,7 +102,7 @@ def simulate_trades_point5(date_stock_dict):
     print("Net profit for one lot" , (total_prof-total_loss)/2*50)
     # Write trades to CSV file
     output_file = 'trades.csv'
-    fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_taken_at']
+    fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_exit_at','trade__taken_near_level (support/resistance)','trade_taken_at']
 
     with open(output_file, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
