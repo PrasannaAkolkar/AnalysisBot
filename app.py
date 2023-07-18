@@ -17,11 +17,11 @@ columns = ['Datetime', 'Company Name', 'Buy Price', 'Trade Type', 'Target Achiev
 breeze = init_Icici_client()
 app = Flask(__name__)
 CORS(app)
-nifty_collection = initMongoAtlas()
+atlasDb = initMongoAtlas()
 
 def on_ticks(ticks):
     # print("Ticks:", ticks)
-    insertIntoCollection(nifty_collection, ticks)
+    insertIntoCollection(atlasDb,'ticks',ticks)
 
 def run_websocket():
     breeze.ws_connect()
@@ -173,7 +173,7 @@ def technicalAnalysis():
 
 @app.route('/nifty-historical')
 def niftyHistorical():
-    print("tick data latest",receiveDataFromCollection(nifty_collection))
+    print("tick data latest",receiveTickDataFromCollection(atlasDb,'ticks'))
     from_dates = get_dates_between("2023-07-18T03:00:00.000Z", "2023-07-19T03:00:00.000Z")
     # from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")

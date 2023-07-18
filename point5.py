@@ -117,6 +117,102 @@ def simulate_trades_point5(date_stock_dict,trades_array):
     return [trades_array,total_prof-total_loss]
 
 
+from bson import ObjectId
+from utils.mongoDbAtlas import receiveNiftyTradeSpecificData, updateDocumentTradeSpecificDataNifty, initMongoAtlas
+mongo = initMongoAtlas()
+def live_point5_trade_simulation(ticks):
+
+    trade_specific_data = receiveNiftyTradeSpecificData(mongo, 'niftytradespecificpointfive')
+    profitable_trade_count = trade_specific_data['number_profit_trades'] # from db
+    loss_trade_count = trade_specific_data['number_loss_trades'] # from db
+
+    if (profitable_trade_count == 0 and loss_trade_count < 3):
+
+        nifty_levels = nifty_point_five_levels()
+        filter_query = {"_id": ObjectId("64b6ddd0c2ad7ae1b7dea1bb")}
+
+        in_trade = trade_specific_data['in_trade'] # from db
+        trade_type = trade_specific_data['trade_type'] # from db
+        target = trade_specific_data['target'] # from db
+        stop_loss_level = trade_specific_data['stoploss_level'] # from db
+        take_position_time = trade_specific_data['take_position_time'] # from db
+    
+        stop_loss = 10
+        buy_price = 0
+        sell_price = 0
+        nifty_value = 0
+        take_position_tolerance = 5 
+        
+
+        stock_price = ticks['close']
+        time = ticks['datetime']
+        nifty_value = min(nifty_levels, key=lambda x: abs(x - stock_price)) # finds the nearest 0.5 level 
+        tolerance = nifty_value * 0.0005
+    
+        if in_trade:
+            print("We are already in a trade")
+        else:
+            if stock_price <= nifty_value + take_position_tolerance and stock_price >= nifty_value:
+                buy_price = stock_price
+                trade_type = "buy" #db
+                take_position_time = time #db
+                target = min([level for level in nifty_levels if level > nifty_value]) #db
+                stop_loss_level = nifty_value - stop_loss #db
+                in_trade = True #db
+                update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':take_position_time, 'stop_loss_level':stop_loss_level, 'target':target}
+                updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+                print("Place a buy order at - " , buy_price)
+            elif stock_price >= nifty_value - take_position_tolerance and stock_price <= nifty_value:
+                sell_price = stock_price
+                trade_type = "sell" #db
+                target = max([level for level in nifty_levels if level < nifty_value])
+                take_position_time = time
+                stop_loss_level = nifty_value + stop_loss
+                in_trade = True #db
+                update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':take_position_time, 'stop_loss_level':stop_loss_level, 'target':target}
+                updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+                print("Place sell order at - " , sell_price)
+            else:
+                print("No suitable condition for taking a trade")
+
+        if in_trade and trade_type == "buy": #db
+            if stock_price >= target - tolerance or stock_price <= stop_loss_level:
+                print("Buy Trade square off completed. Price: " + str(stock_price))
+                in_trade = False #db
+                trade_type = ""
+                
+                if stock_price >= target - tolerance:
+                    print("profitable trade")
+                    profitable_trade_count = profitable_trade_count + 1
+                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_profit_trades':profitable_trade_count}
+                    updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+                else:
+                    print("Loss trade")
+                    loss_trade_count+=1
+                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_loss_trades':loss_trade_count}
+                    updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+
+        if in_trade and trade_type == "sell":
+            if stock_price <= target + tolerance or stock_price >= stop_loss_level:
+                in_trade = False
+                trade_type = ""
+                if stock_price <= target + tolerance:
+                    print("profitable trade")
+                    profitable_trade_count = profitable_trade_count + 1
+                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_profit_trades':profitable_trade_count}
+                    updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+                else:
+                    print("Loss trade")
+                    loss_trade_count+=1
+                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_loss_trades':loss_trade_count}
+                    updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+        else:
+            exit()
+        return True
+    
+    else:
+        print("Not allowed to take trade for the day")
+        return False
 
 
 
@@ -150,3 +246,6 @@ def create_levels(base_level):
 #base_level = 17800
 # point_five_levels = create_levels(base_level)
 '''
+
+
+

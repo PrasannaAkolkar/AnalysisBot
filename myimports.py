@@ -36,4 +36,4 @@ from flask_cors import CORS
 from login.login import loginUser
 from utils.technicalAnalysis import ta_values
 from point5 import simulate_trades_point5
-from utils.mongoDbAtlas import initMongoAtlas, insertIntoCollection, receiveDataFromCollection
+from utils.mongoDbAtlas import initMongoAtlas , insertIntoCollection, receiveTickDataFromCollection , receiveNiftyTradeSpecificData
