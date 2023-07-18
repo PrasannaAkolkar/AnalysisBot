@@ -17,7 +17,9 @@ from creds import getCreds, getIcici
 from yahoo_fin import stock_info as si
 from ks_api_client import ks_api
 from trade_operations import getHistoricalDataICICI
-from initialize_client import init_Kotak_client, init_Icici_client
+# from initialize_client import init_Kotak_client, init_Icici_client
+from initialize_client import init_Icici_client
+
 from download_stock_data import download_csv_yahoo
 from stock_price_analysis import getStockPriceAnalysis
 from backtest import backtestHammerStrategy, backtestHammerStrategyLive
@@ -34,3 +36,4 @@ from flask_cors import CORS
 from login.login import loginUser
 from utils.technicalAnalysis import ta_values
 from point5 import simulate_trades_point5
+from utils.mongoDbAtlas import initMongoAtlas, insertIntoCollection, receiveDataFromCollection

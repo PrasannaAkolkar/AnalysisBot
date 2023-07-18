@@ -7,39 +7,6 @@ Created on Wed Apr 20 19:33:06 2022
 
 from myimports import *
 
-
-breeze = init_Icici_client()
-
-#get historical data
-historical_data = getHistoricalDataICICI(breeze,"1day", "2021-08-17" , "2022-08-18", "RELIND","NSE","cash")
-
-# print("df " , historical_data)
-
-# names = breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
-# print("Names" , names)
-
-# print("funds ",breeze.get_funds())
-
-app = Flask(__name__)
-CORS(app)
-
-# breeze.ws_connect()
-
-# breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second")
-
-# def on_ticks(ticks):
-#     print("Ticks: {}".format(ticks))
-# breeze.on_ticks = on_ticks
-
-# quote = breeze.get_quotes(stock_code="ICIBAN",
-#                     exchange_code="NFO",
-#                     product_type="options",
-#                     expiry_date="2023-07-27T06:00:00.000Z",
-#                      right="others"
-
-#                     )
-
-
 candle_stick_time = "15min"
 time_period = "4d"
 nifty_50_companies_list = "nifty_orig.csv"
@@ -47,8 +14,24 @@ candle_stick_time_interval = "15m"
 columns = ['Datetime', 'Company Name', 'Buy Price', 'Trade Type', 'Target Achieved',
            'Profit', 'Loss', 'SL']
 
+breeze = init_Icici_client()
+app = Flask(__name__)
+CORS(app)
+nifty_collection = initMongoAtlas()
+
+def on_ticks(ticks):
+    # print("Ticks:", ticks)
+    insertIntoCollection(nifty_collection, ticks)
+
+def run_websocket():
+    breeze.ws_connect()
+    breeze.on_ticks = on_ticks
+    breeze.subscribe_feeds(exchange_code="NSE", stock_code="NIFTY", product_type="cash", interval="1minute")
+
+websocket_thread = threading.Thread(target=run_websocket)
+websocket_thread.start()
+
 def get_dates():
-    
     now = datetime.now()
     current_date = now.strftime("%Y-%m-%dT%H:%M:%S.000Z") 
     one_year_ago = now - timedelta(days=365)
@@ -65,55 +48,6 @@ def get_dates_between(start_date, end_date):
         dates.append(current.strftime(date_format))
         current += timedelta(days=1)
     return dates
-def run_every_five_seconds():
-    print("inside")
-    while True:
-        getQuote()
-        time.sleep(10)
-
-
-def getQuote():
-    '''
-    DR REDDY - 1055
-    AXIS - 2302
-    EICHER - 1067
-    ASIAN PAINT - 797
-    DIVIS - 3924
-    HDFC - 1247
-    HERMOTO - 1260
-    HINDUSTAN UNILEVER - 1283
-    RELIANCE - 1839
-
-    '''
-
-    companyTokenDict = {
-        "RELIANCE.NS": 1839,
-        "ASIANPAINT.NS": 797,
-        "DIVISLAB.NS": 3924,
-        "DRREDDY.NS": 1055,
-        "EICHERMOT.NS": 1067,
-        "HDFC.NS": 1247,
-        "HEROMOTOCO.NS": 1260,
-        "HINDUNILVR.NS": 1283
-    }
-    for company_name, token in companyTokenDict.items():
-        quote = init_Kotak_client.quote(instrument_token=token)
-        print(company_name, quote.get("success")[0].get("open_price"))
-        # backtestHammerStrategyLive(quote,getR_SDetails,company_name)
-
-    # for token in [1067]:
-    #     quote = client.quote(instrument_token = token)
-    #     # backtestHammerStrategyLive(quote,getR_SDetails,'EICHERMOT.NS')
-
-    # quote = client.quote(instrument_token = 2302)
-    # print("quote " , quote.get("success")[0].get("ltp"))
-    # backtestHammerStrategyLive(quote,)
-
-
-t = threading.Thread(target=run_every_five_seconds)
-t.daemon = True
-# t.start()
-
 
 @app.route('/scalpEma')
 def scalpEmaStrategy():
@@ -127,7 +61,6 @@ def scalpEmaStrategy():
     nifty_data.to_csv('dataset//nifty_5min.csv')
     banknifty_data.to_csv('dataset//banknifty_5min.csv')
 
-    # print(signal_above_ema(nifty_data))
     (check_ema_alert(nifty_data))
 
     return {'True': 'True'}
@@ -144,7 +77,6 @@ def login():
     else:
         return  {'Login': 'False'}
 
-# @app.route("/snapshot")
 @app.route("/snapshot", methods=['POST'])
 def snapshot():
     
@@ -159,8 +91,6 @@ def snapshot():
 
     download_csv_yahoo(nifty_50_companies_list, start_date,
                        end_date, interval="15m", candle_stick_time="15min")
-    # download_csv_yahoo(nifty_50_companies_list, "2023-05-21",
-    #                    "2023-05-29", interval="15m", candle_stick_time="15min")
     return {'Download': 'True'}
 
 
@@ -243,9 +173,9 @@ def technicalAnalysis():
 
 @app.route('/nifty-historical')
 def niftyHistorical():
-    
-    # from_dates = get_dates_between("2023-07-01T03:00:00.000Z", "2023-07-30T03:00:00.000Z")
-    from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
+    print("tick data latest",receiveDataFromCollection(nifty_collection))
+    from_dates = get_dates_between("2023-07-18T03:00:00.000Z", "2023-07-19T03:00:00.000Z")
+    # from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-03-01T03:00:00.000Z", "2023-03-31T03:00:00.000Z")
@@ -283,7 +213,7 @@ def niftyHistorical():
         net_profit_loss_total+=net_profit_loss
         price_list = []
         date_time_list = []
-        
+
     output_file = 'point5_results/trades.csv'
     fieldnames = ['trade type', 'trade price', 'trade squareoff price', 'trade profit', 'trade loss', 'stoploss level','trade_exit_at','trade__taken_near_level (support/resistance)','trade_taken_at']
 
@@ -291,27 +221,25 @@ def niftyHistorical():
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(trades_array)
+    quote = breeze.get_quotes(stock_code=stock_code,
+                    exchange_code="NSE"
+                    )
+    
+    print("quote nifty" , quote['Success'][0])
     return {"Code":str(net_profit_loss_total)}
 
 @app.route("/getdetails")
 def getR_SDetails():
-
     company_R_S_points = getStockPriceAnalysis(
         nifty_50_companies_list, candle_stick_time="15min")
     return company_R_S_points
 
 @app.route("/testall", methods=['POST'])
 def testAll():
-
     data = request.json
     start_date = data.get('start_date').split('T')[0]
     end_date = data.get('end_date').split('T')[0]
-
-    # testMultipleHammerStocks(backtesthammer, columns,
-    #                          candle_stick_time="15min")
-
     testMultipleHammerStocks(backtesthammer, columns, start_date, end_date,candle_stick_time="15min")
-    # return send_file("results//final_result1.csv", as_attachment=True)
     return {"success": 200}
 
 @app.route('/downloadBacktestHammerCsv')
@@ -320,15 +248,9 @@ def downloadBacktestHammerCsv():
 
 @app.route('/backtesthammer')
 def backtesthammer(company_name='', final_result='', name_index=0,start_date='', end_date=''):
-
-    # final_result = backtestHammerStrategy(
-    #     getR_SDetails, company_name, final_result, name_index=0, start='2023-05-30', end='2023-06-02', interval='1m')
-
-    print("backtest data" , start_date , end_date)
     final_result = backtestHammerStrategy(
         getR_SDetails, company_name, final_result, name_index=0, start=start_date, end=end_date, interval='1m')
     return final_result
-
 
 @app.after_request
 def add_header(response):
@@ -348,4 +270,6 @@ def add_header(response):
 
 
 if __name__ == "__main__":
+    
     app.run(port=5000, debug=True)
+    breeze.ws_disconnect()
