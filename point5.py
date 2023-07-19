@@ -123,18 +123,18 @@ mongo = initMongoAtlas()
 def live_point5_trade_simulation(ticks):
 
     trade_specific_data = receiveNiftyTradeSpecificData(mongo, 'niftytradespecificpointfive')
-    profitable_trade_count = trade_specific_data['number_profit_trades'] # from db
-    loss_trade_count = trade_specific_data['number_loss_trades'] # from db
+    profitable_trade_count = int(trade_specific_data['number_profit_trades']) # from db
+    loss_trade_count = int(trade_specific_data['number_loss_trades']) # from db
 
     if (profitable_trade_count == 0 and loss_trade_count < 3):
 
         nifty_levels = nifty_point_five_levels()
         filter_query = {"_id": ObjectId("64b6ddd0c2ad7ae1b7dea1bb")}
 
-        in_trade = trade_specific_data['in_trade'] # from db
+        in_trade = bool(trade_specific_data['in_trade']) # from db
         trade_type = trade_specific_data['trade_type'] # from db
-        target = trade_specific_data['target'] # from db
-        stop_loss_level = trade_specific_data['stoploss_level'] # from db
+        target = float(trade_specific_data['target']) # from db
+        stop_loss_level = float(trade_specific_data['stoploss_level']) # from db
         take_position_time = trade_specific_data['take_position_time'] # from db
     
         stop_loss = 10
@@ -144,7 +144,7 @@ def live_point5_trade_simulation(ticks):
         take_position_tolerance = 5 
         
 
-        stock_price = ticks['close']
+        stock_price = float(ticks['close'])
         time = ticks['datetime']
         nifty_value = min(nifty_levels, key=lambda x: abs(x - stock_price)) # finds the nearest 0.5 level 
         tolerance = nifty_value * 0.0005

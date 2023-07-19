@@ -20,8 +20,10 @@ CORS(app)
 atlasDb = initMongoAtlas()
 
 def on_ticks(ticks):
-    # print("Ticks:", ticks)
+    print("Ticks:", ticks)
     insertIntoCollection(atlasDb,'ticks',ticks)
+    tick_data = receiveTickDataFromCollection(atlasDb, 'ticks')
+    live_point5_trade_simulation(tick_data)
 
 def run_websocket():
     breeze.ws_connect()
@@ -174,7 +176,7 @@ def technicalAnalysis():
 @app.route('/nifty-historical')
 def niftyHistorical():
     print("tick data latest",receiveTickDataFromCollection(atlasDb,'ticks'))
-    from_dates = get_dates_between("2023-07-18T03:00:00.000Z", "2023-07-19T03:00:00.000Z")
+    from_dates = get_dates_between("2023-07-19T03:00:00.000Z", "2023-07-20T03:00:00.000Z")
     # from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
