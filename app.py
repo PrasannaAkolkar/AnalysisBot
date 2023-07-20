@@ -26,7 +26,8 @@ def on_ticks(ticks):
     print("Ticks:", ticks)
     insertIntoCollection(atlasDb,'ticks',ticks)
     tick_data = receiveTickDataFromCollection(atlasDb, 'ticks')
-    live_point5_trade_simulation(tick_data,breeze)
+    live_point5_trade_simulation(tick_data,breeze)  # this is from point5.py
+    # live_point5_trade_simulation(tick_data, breeze) # this is from livePoint5Trade.py
 
 def run_websocket():
     breeze.ws_connect()
@@ -54,7 +55,22 @@ def get_dates_between(start_date, end_date):
         current += timedelta(days=1)
     return dates
 
+def getDateTimeIST():
+    current_time_utc = datetime.now(pytz.utc)
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    current_time_ist = current_time_utc.astimezone(ist_timezone)
+    print("Current time in IST:", current_time_ist.strftime('%Y-%m-%d %H:%M:%S %Z'))
 
+def check_time():
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist)
+    start_time = current_time.replace(hour=9, minute=59, second=0, microsecond=0)
+    end_time = current_time.replace(hour=14, minute=30, second=0, microsecond=0)
+
+    if start_time <= current_time <= end_time:
+        return True
+    else:
+        return False
 
 @app.route('/scalpEma')
 def scalpEmaStrategy():
@@ -180,18 +196,9 @@ def technicalAnalysis():
 
 @app.route('/nifty-historical')
 def niftyHistorical():
-    # now = datetime.utcnow()
-    # today_date = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
-    # expiry = get_next_thursday(today_date)
-    
-    # quotex = breeze.get_quotes(stock_code="NIFTY",
-    #                 exchange_code="NFO",
-    #                 expiry_date=expiry,
-    #                 product_type="options",
-    #                 right="call",
-    #                 strike_price="19800")
-    # print("quote ",quotex)
-    from_dates = get_dates_between("2023-07-20T03:00:00.000Z", "2023-07-21T03:00:00.000Z")
+    getDateTimeIST()
+    print("check time - ",check_time())
+    from_dates = get_dates_between("2023-07-01T03:00:00.000Z", "2023-07-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
@@ -225,7 +232,7 @@ def niftyHistorical():
             price_list.append(obj['close'])
             date_time_list.append(obj['datetime'])
 
-        my_dict = {k: v for k, v in zip(date_time_list[50:], price_list[50:])}
+        my_dict = {k: v for k, v in zip(date_time_list[40:], price_list[40:])}
         trades_array, net_profit_loss = simulate_trades_point5(my_dict,trades_array)
         net_profit_loss_total+=net_profit_loss
         price_list = []
