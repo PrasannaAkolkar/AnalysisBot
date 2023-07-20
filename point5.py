@@ -14,6 +14,8 @@ def nifty_point_five_levels():
     return nifty
 
 import csv
+from datetime import datetime,timedelta
+
 
 def simulate_trades_point5(date_stock_dict,trades_array):
     nifty_levels = nifty_point_five_levels()
@@ -120,7 +122,7 @@ def simulate_trades_point5(date_stock_dict,trades_array):
 from bson import ObjectId
 from utils.mongoDbAtlas import receiveNiftyTradeSpecificData, updateDocumentTradeSpecificDataNifty, initMongoAtlas
 mongo = initMongoAtlas()
-def live_point5_trade_simulation(ticks):
+def live_point5_trade_simulation(ticks, breeze):
 
     trade_specific_data = receiveNiftyTradeSpecificData(mongo, 'niftytradespecificpointfive')
     profitable_trade_count = int(trade_specific_data['number_profit_trades']) # from db
@@ -131,7 +133,13 @@ def live_point5_trade_simulation(ticks):
         nifty_levels = nifty_point_five_levels()
         filter_query = {"_id": ObjectId("64b6ddd0c2ad7ae1b7dea1bb")}
 
-        in_trade = bool(trade_specific_data['in_trade']) # from db
+        # in_trade = bool(trade_specific_data['in_trade']) # from db
+        in_trade = False
+        if(trade_specific_data['in_trade'] == "True"):
+            in_trade = True
+        elif(trade_specific_data['in_trade'] == "False"):
+            in_trade = False
+            
         trade_type = trade_specific_data['trade_type'] # from db
         target = float(trade_specific_data['target']) # from db
         stop_loss_level = float(trade_specific_data['stoploss_level']) # from db
@@ -150,6 +158,7 @@ def live_point5_trade_simulation(ticks):
         tolerance = nifty_value * 0.0005
     
         if in_trade:
+            print("in trade " , in_trade)
             print("We are already in a trade")
         else:
             if stock_price <= nifty_value + take_position_tolerance and stock_price >= nifty_value:
@@ -159,9 +168,18 @@ def live_point5_trade_simulation(ticks):
                 target = min([level for level in nifty_levels if level > nifty_value]) #db
                 stop_loss_level = nifty_value - stop_loss #db
                 in_trade = True #db
-                update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':take_position_time, 'stop_loss_level':stop_loss_level, 'target':target}
+                update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 'take_position_time':take_position_time, 'stop_loss_level':stop_loss_level, 'target':target}
                 updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
                 print("Place a buy order at - " , buy_price)
+                expiry = get_next_thursday(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+                strike_price = nearest_multiple_of_50(float(ticks['close']))
+                quoteNiftyATMOption = breeze.get_quotes(stock_code="NIFTY",
+                    exchange_code="NFO",
+                    expiry_date=expiry,
+                    product_type="options",
+                    right="call",
+                    strike_price=str(strike_price))
+                print("Call Buy order can be placed at premium - ",quoteNiftyATMOption)
             elif stock_price >= nifty_value - take_position_tolerance and stock_price <= nifty_value:
                 sell_price = stock_price
                 trade_type = "sell" #db
@@ -169,9 +187,18 @@ def live_point5_trade_simulation(ticks):
                 take_position_time = time
                 stop_loss_level = nifty_value + stop_loss
                 in_trade = True #db
-                update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':take_position_time, 'stop_loss_level':stop_loss_level, 'target':target}
+                update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 'take_position_time':take_position_time, 'stop_loss_level':stop_loss_level, 'target':target}
                 updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
                 print("Place sell order at - " , sell_price)
+                expiry = get_next_thursday(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+                strike_price = nearest_multiple_of_50(float(ticks['close']))
+                quoteNiftyATMOption = breeze.get_quotes(stock_code="NIFTY",
+                    exchange_code="NFO",
+                    expiry_date=expiry,
+                    product_type="options",
+                    right="put",
+                    strike_price=str(strike_price))
+                print("Put Buy order can be placed at premium - ",quoteNiftyATMOption)
             else:
                 print("No suitable condition for taking a trade")
 
@@ -184,12 +211,12 @@ def live_point5_trade_simulation(ticks):
                 if stock_price >= target - tolerance:
                     print("profitable trade")
                     profitable_trade_count = profitable_trade_count + 1
-                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_profit_trades':profitable_trade_count}
+                    update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_profit_trades':profitable_trade_count}
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
                 else:
                     print("Loss trade")
                     loss_trade_count+=1
-                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_loss_trades':loss_trade_count}
+                    update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_loss_trades':loss_trade_count}
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
 
         if in_trade and trade_type == "sell":
@@ -199,12 +226,12 @@ def live_point5_trade_simulation(ticks):
                 if stock_price <= target + tolerance:
                     print("profitable trade")
                     profitable_trade_count = profitable_trade_count + 1
-                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_profit_trades':profitable_trade_count}
+                    update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_profit_trades':profitable_trade_count}
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
                 else:
                     print("Loss trade")
                     loss_trade_count+=1
-                    update_data = {'trade_type': trade_type , 'in_trade':in_trade, 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_loss_trades':loss_trade_count}
+                    update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 'take_position_time':0, 'stop_loss_level':0, 'target':0, 'number_loss_trades':loss_trade_count}
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
         else:
             exit()
@@ -215,6 +242,25 @@ def live_point5_trade_simulation(ticks):
         return False
 
 
+
+def get_next_thursday(today_date):
+    
+    input_date = datetime.strptime(today_date, "%Y-%m-%dT%H:%M:%S.000Z")
+    days_until_thursday = (3 - input_date.weekday() + 7) % 7
+    next_thursday = input_date + timedelta(days=days_until_thursday)
+    next_thursday_str = next_thursday.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+    return next_thursday_str
+
+def nearest_multiple_of_50(stock_price):
+    remainder = stock_price % 50
+    if remainder <= 25:
+        nearest_multiple = stock_price - remainder
+
+    else:
+        nearest_multiple = stock_price + (50 - remainder)
+
+    return nearest_multiple
 
 
 # Example usage

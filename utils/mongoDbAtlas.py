@@ -64,7 +64,7 @@ payload = {
 # payload = {
 # 'id': '123456',
 # 'trade_type' : '',
-# 'in_trade' : False,
+# 'in_trade' : "False",
 # 'target' : 0,
 # 'stoploss_level' : 0,
 # 'take_position_time' : 0,
@@ -80,6 +80,17 @@ payload = {
 # y = receiveNiftyTradeSpecificData(x , 'niftytradespecificpointfive')
 # print(y)
 
+# x = initMongoAtlas()
 # filter_query = {"_id": ObjectId("64b6ddd0c2ad7ae1b7dea1bb")}
-# update_data = {"in_trade":False,"trade_type":""}
-# updateDocumentTradeSpecificDataNifty(x, 'niftytradespecificpointfive', filter_query, update_data)
+# payload = {
+# 'id': '123456',
+# 'trade_type' : '',
+# 'in_trade' : "False",
+# 'target' : 0,
+# 'stop_loss_level' : 0,
+# 'take_position_time' : 0,
+# 'number_profit_trades' : 0,
+# 'number_loss_trades' : 0,
+# 'datetime': ''
+# }
+# updateDocumentTradeSpecificDataNifty(x, 'niftytradespecificpointfive', filter_query, payload)

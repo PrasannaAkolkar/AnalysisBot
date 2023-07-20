@@ -19,11 +19,14 @@ app = Flask(__name__)
 CORS(app)
 atlasDb = initMongoAtlas()
 
+
+
+
 def on_ticks(ticks):
     print("Ticks:", ticks)
     insertIntoCollection(atlasDb,'ticks',ticks)
     tick_data = receiveTickDataFromCollection(atlasDb, 'ticks')
-    live_point5_trade_simulation(tick_data)
+    live_point5_trade_simulation(tick_data,breeze)
 
 def run_websocket():
     breeze.ws_connect()
@@ -50,6 +53,8 @@ def get_dates_between(start_date, end_date):
         dates.append(current.strftime(date_format))
         current += timedelta(days=1)
     return dates
+
+
 
 @app.route('/scalpEma')
 def scalpEmaStrategy():
@@ -175,8 +180,18 @@ def technicalAnalysis():
 
 @app.route('/nifty-historical')
 def niftyHistorical():
-    print("tick data latest",receiveTickDataFromCollection(atlasDb,'ticks'))
-    from_dates = get_dates_between("2023-07-19T03:00:00.000Z", "2023-07-20T03:00:00.000Z")
+    # now = datetime.utcnow()
+    # today_date = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    # expiry = get_next_thursday(today_date)
+    
+    # quotex = breeze.get_quotes(stock_code="NIFTY",
+    #                 exchange_code="NFO",
+    #                 expiry_date=expiry,
+    #                 product_type="options",
+    #                 right="call",
+    #                 strike_price="19800")
+    # print("quote ",quotex)
+    from_dates = get_dates_between("2023-07-20T03:00:00.000Z", "2023-07-21T03:00:00.000Z")
     # from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
@@ -210,7 +225,7 @@ def niftyHistorical():
             price_list.append(obj['close'])
             date_time_list.append(obj['datetime'])
 
-        my_dict = {k: v for k, v in zip(date_time_list[40:], price_list[40:])}
+        my_dict = {k: v for k, v in zip(date_time_list[50:], price_list[50:])}
         trades_array, net_profit_loss = simulate_trades_point5(my_dict,trades_array)
         net_profit_loss_total+=net_profit_loss
         price_list = []
