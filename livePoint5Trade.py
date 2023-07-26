@@ -116,14 +116,14 @@ def live_point5_trade_simulation(ticks, breeze):
                     right="call",
                     strike_price=str(strike_price))
                 order = True
-                # order = placeOrder("NIFTY" , "limit" , "0", "50", str(int(quoteNiftyATMOption["ltp"]) - 2), str(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")), expiry,"call" , str(strike_price))
+                # order = placeOrder("NIFTY" , "limit" , "0", "50", str(int(quoteNiftyATMOption["Success"][0]["ltp"]) - 2), str(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")), expiry,"call" , str(strike_price))
                 if(order):
                     in_trade = True #db
                     update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 
                                    'take_position_time':take_position_time,
                                     'stop_loss_level':stop_loss_level, 'target':target,
-                                    'buy_sell_price_premium':str(quoteNiftyATMOption["ltp"]),
-                                    'sl_value_premium': str(quoteNiftyATMOption["ltp"] - (buy_price_nifty_value_diff_premium_atm-(stop_loss/2)))
+                                    'buy_sell_price_premium':str(quoteNiftyATMOption["Success"][0]["ltp"]),
+                                    'sl_value_premium': str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm-(stop_loss/2)))
                                     }
                     
 
@@ -151,15 +151,15 @@ def live_point5_trade_simulation(ticks, breeze):
                     right="put",
                     strike_price=str(strike_price))
                 order = True
-                # order = placeOrder("NIFTY" , "limit" , "0", "50", str(int(quoteNiftyATMOption["ltp"]) - 2), str(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")), expiry,"put" , str(strike_price))
+                # order = placeOrder("NIFTY" , "limit" , "0", "50", str(int(quoteNiftyATMOption["Success"][0]["ltp"]) - 2), str(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")), expiry,"put" , str(strike_price))
                 if(order):
                     print("Put Buy order can be placed at premium - ",quoteNiftyATMOption)
                     in_trade = True #db
                     update_data = {'trade_type': trade_type , 'in_trade':str(in_trade), 
                                    'take_position_time':take_position_time, 
                                    'stop_loss_level':stop_loss_level, 
-                                   'target':target, 'buy_sell_price_premium':str(quoteNiftyATMOption["ltp"]),
-                                   'sl_value_premium': str(quoteNiftyATMOption["ltp"] - (buy_price_nifty_value_diff_premium_atm-(stop_loss/2)))
+                                   'target':target, 'buy_sell_price_premium':str(quoteNiftyATMOption["Success"][0]["ltp"]),
+                                   'sl_value_premium': str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm-(stop_loss/2)))
                                    }
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
                     print("Place a put buy order at - " , sell_price)
@@ -244,6 +244,11 @@ def run_websocket():
     breeze.on_ticks = on_ticks
     breeze.subscribe_feeds(exchange_code="NSE", stock_code="NIFTY", product_type="cash", interval="1minute")
 
+breeze.ws_connect()
+breeze.on_ticks = on_ticks
+breeze.subscribe_feeds(exchange_code="NSE", stock_code="NIFTY", product_type="cash", interval="1minute")
+websocket_thread = threading.Thread(target=run_websocket)
+websocket_thread.start()
 
 def placeOrder(stock_code, order_type, stoploss, quantity, price, validity_date, expiry, right, strike_price):
     try:
@@ -298,8 +303,8 @@ def squareOff(stock_code, order_type, quantity, price, validity_date, expiry, ri
     except:
         print("Order could not be placed due to some err" , order)
         return False
-websocket_thread = threading.Thread(target=run_websocket)
-websocket_thread.start()
+
+
 
 
 # x = placeOrder("NIFTY", "limit", "", "50", "100", "2023-07-21T06:00:00.000Z", "2023-07-27T06:00:00.000Z", "call", "19800")
@@ -319,3 +324,15 @@ websocket_thread.start()
 # print(quoteNiftyATMOption)
 
 # print("time"  ,  check_time())
+
+if __name__ == "__main__":
+    print("Hello")
+    # websocket_thread = threading.Thread(target=run_websocket)
+    # websocket_thread.start()
+    # quoteNiftyATMOption = breeze.get_quotes(stock_code="NIFTY",
+    #                 exchange_code="NFO",
+    #                 expiry_date="2023-07-27T06:00:00.000Z",
+    #                 product_type="options",
+    #                 right="call",
+    #                 strike_price=str(19800))
+    # print("quote" , quoteNiftyATMOption)
