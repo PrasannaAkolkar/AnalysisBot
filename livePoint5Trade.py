@@ -4,7 +4,7 @@ from utils.mongoDbAtlas import receiveNiftyTradeSpecificData, updateDocumentTrad
 from initialize_client import init_Icici_client
 import threading
 import pytz
-
+from send_message_discord import send_discord_message
 
 
 atlasDb = initMongoAtlas()
@@ -123,11 +123,17 @@ def live_point5_trade_simulation(ticks, breeze):
                                    'take_position_time':take_position_time,
                                     'stop_loss_level':stop_loss_level, 'target':target,
                                     'buy_sell_price_premium':str(quoteNiftyATMOption["Success"][0]["ltp"]),
-                                    'sl_value_premium': str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm-(stop_loss/2)))
+                                    'sl_value_premium': str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm+(stop_loss/2)))
                                     }
                     
 
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
+                    send_discord_message("@everyone - Get into a CALL Buy trade in NIFTY at premium price - " 
+                                         + str(quoteNiftyATMOption["Success"][0]["ltp"]) + " and stoploss premium value - " + 
+                                         str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm+(stop_loss/2)))
+                                         + " and target level will be - " + str(target)
+                                         )
+                    
                     print("Place a buy order at - " , buy_price)
                 else:
                     print("Issue in placing order" , order)
@@ -159,10 +165,15 @@ def live_point5_trade_simulation(ticks, breeze):
                                    'take_position_time':take_position_time, 
                                    'stop_loss_level':stop_loss_level, 
                                    'target':target, 'buy_sell_price_premium':str(quoteNiftyATMOption["Success"][0]["ltp"]),
-                                   'sl_value_premium': str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm-(stop_loss/2)))
+                                   'sl_value_premium': str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm+(stop_loss/2)))
                                    }
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
                     print("Place a put buy order at - " , sell_price)
+                    send_discord_message("@everyone - Get into a PUT Buy trade in NIFTY at premium price - " 
+                                         + str(quoteNiftyATMOption["Success"][0]["ltp"]) + " and stoploss premium value - " + 
+                                         str(quoteNiftyATMOption["Success"][0]["ltp"] - (buy_price_nifty_value_diff_premium_atm+(stop_loss/2)))
+                                         + " and target level will be - " + str(target)
+                                         )
                 else:
                     print("Issue" , order)
 
@@ -171,6 +182,8 @@ def live_point5_trade_simulation(ticks, breeze):
                 print("No suitable condition for taking a trade")
 
         if in_trade and trade_type == "buy": #db
+            if(int(trade_specific_data['target']) - stock_price < 27):
+                send_discord_message("@everyone - Half Target Achieved - You can move your SL to the call buy price")
             if stock_price >= target - tolerance or stock_price <= stop_loss_level:
                 print("Buy Trade square off completed. Price: " + str(stock_price))
                 in_trade = False #db
@@ -198,6 +211,8 @@ def live_point5_trade_simulation(ticks, breeze):
                     updateDocumentTradeSpecificDataNifty(mongo , 'niftytradespecificpointfive', filter_query, update_data)
 
         if in_trade and trade_type == "sell":
+            if(stock_price - int(trade_specific_data['target']) < 27):
+                send_discord_message("@everyone - Half Target Achieved - You can move your SL to the put buy price")
             if stock_price <= target + tolerance or stock_price >= stop_loss_level:
                 in_trade = False
                 trade_type = ""
@@ -312,18 +327,18 @@ def squareOff(stock_code, order_type, quantity, price, validity_date, expiry, ri
 
 
 
-# expiry = get_next_thursday(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"))
-# print("expiry" , expiry)
-# # strike_price = nearest_multiple_of_50(float(ticks['close']))
-# quoteNiftyATMOption = breeze.get_quotes(stock_code="NIFTY",
-#                     exchange_code="NFO",
-#                     expiry_date=expiry,
-#                     product_type="options",
-#                     right="put",
-#                     strike_price=str(19900))
-# print(quoteNiftyATMOption)
+expiry = get_next_thursday(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+print("expiry" , expiry)
+# strike_price = nearest_multiple_of_50(float(ticks['close']))
+quoteNiftyATMOption = breeze.get_quotes(stock_code="NIFTY",
+                    exchange_code="NFO",
+                    expiry_date=expiry,
+                    product_type="options",
+                    right="put",
+                    strike_price=str(19900))
+print(quoteNiftyATMOption)
 
-# print("time"  ,  check_time())
+print("time"  ,  check_time())
 
 if __name__ == "__main__":
     print("Hello")

@@ -1,1 +1,4 @@
 trade type,trade price,trade squareoff price,trade profit,trade loss,stoploss level,trade_exit_at,trade__taken_near_level (support/resistance),trade_taken_at
+buy,19629.1,19614.6,0,12.099999999998545,19617,2023-07-28 10:06:00,19627,2023-07-28 10:03:00
+buy,19627.75,19602.35,0,10.75,19617,2023-07-28 10:21:00,19627,2023-07-28 10:18:00
+sell,19626.8,19637.3,0,10.200000000000728,19637,2023-07-28 10:42:00,19627,2023-07-28 10:34:00

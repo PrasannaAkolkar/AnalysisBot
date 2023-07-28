@@ -91,6 +91,8 @@ payload = {
 # 'take_position_time' : 0,
 # 'number_profit_trades' : 0,
 # 'number_loss_trades' : 0,
-# 'datetime': ''
+# 'datetime': '',
+# 'buy_sell_price_premium':"",
+# "sl_value_premium":""
 # }
 # updateDocumentTradeSpecificDataNifty(x, 'niftytradespecificpointfive', filter_query, payload)

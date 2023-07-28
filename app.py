@@ -198,7 +198,7 @@ def technicalAnalysis():
 def niftyHistorical():
     getDateTimeIST()
     print("check time - ",check_time())
-    from_dates = get_dates_between("2023-07-26T03:00:00.000Z", "2023-07-27T03:00:00.000Z")
+    from_dates = get_dates_between("2023-07-28T03:00:00.000Z", "2023-07-28T03:00:00.000Z")
     # from_dates = get_dates_between("2023-06-01T03:00:00.000Z", "2023-06-30T03:00:00.000Z")
     # from_dates = get_dates_between("2023-05-01T03:00:00.000Z", "2023-05-31T03:00:00.000Z")
     # from_dates = get_dates_between("2023-04-01T03:00:00.000Z", "2023-04-30T03:00:00.000Z")
